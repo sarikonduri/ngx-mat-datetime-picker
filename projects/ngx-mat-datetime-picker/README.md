@@ -66,6 +66,7 @@ Timepicker
 <ngx-mat-timepicker [(ngModel)]="date" [stepHour]="2" [stepMinute]="5" [stepSecond]="10"></ngx-mat-timepicker>
 <ngx-mat-timepicker [(ngModel)]="date" [showSpinners]="showSpinners"></ngx-mat-timepicker>
 <ngx-mat-timepicker [(ngModel)]="date" [disableSecond]="disableSecond"></ngx-mat-timepicker>
+<ngx-mat-timepicker [(ngModel)]="date" [time12hFormat]="time12hFormat"></ngx-mat-timepicker>
 ```
 
 ## Theming
