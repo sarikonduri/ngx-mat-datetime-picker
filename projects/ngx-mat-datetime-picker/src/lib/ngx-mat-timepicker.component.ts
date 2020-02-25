@@ -5,6 +5,7 @@ import { Moment } from 'moment';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { DEFAULT_HOUR_PLACEHOLDER, DEFAULT_MINUTE_PLACEHOLDER, DEFAULT_SECOND_PLACEHOLDER, DEFAULT_STEP, formatTwoDigitTimeValue, getHour, getMinute, getSecond, LIMIT_TIMES, PATTERN_INPUT_HOUR, PATTERN_INPUT_MINUTE, PATTERN_INPUT_SECOND, setHour, setMinute, setSecond } from './utils/date-utils';
+import { getMeridian } from './utils/date-utils';
 const moment = moment_;
 
 @Component({
@@ -12,7 +13,7 @@ const moment = moment_;
   templateUrl: './ngx-mat-timepicker.component.html',
   styleUrls: ['./ngx-mat-timepicker.component.scss'],
   host: {
-    'class': 'ngx-mat-timepicker'
+    class: 'ngx-mat-timepicker'
   },
   providers: [
     {
@@ -26,6 +27,36 @@ const moment = moment_;
 })
 export class NgxMatTimepickerComponent implements ControlValueAccessor, OnInit, OnChanges {
 
+  private get meridian() {
+    return this.form.controls.meridian.value;
+  }
+
+  /** Hour */
+  private get hour() {
+    const val = Number(this.form.controls.hour.value);
+    return isNaN(val) ? 0 : val;
+  }
+
+  private get minute() {
+    const val = Number(this.form.controls.minute.value);
+    return isNaN(val) ? 0 : val;
+  }
+
+  private get second() {
+    const val = Number(this.form.controls.second.value);
+    return isNaN(val) ? 0 : val;
+  }
+
+  constructor(private cd: ChangeDetectorRef, private formBuilder: FormBuilder) {
+    this.form = this.formBuilder.group(
+      {
+        hour: [{ value: null, disabled: this.disabled }, [Validators.required, Validators.pattern(PATTERN_INPUT_HOUR)]],
+        minute: [{ value: null, disabled: this.disabled }, [Validators.required, Validators.pattern(PATTERN_INPUT_MINUTE)]],
+        second: [{ value: null, disabled: this.disabled }, [Validators.required, Validators.pattern(PATTERN_INPUT_SECOND)]],
+        meridian: [{ value: null, disabled: this.disabled }, [Validators.required]]
+      });
+  }
+
   public form: FormGroup;
 
   @Input() disabled = false;
@@ -37,27 +68,9 @@ export class NgxMatTimepickerComponent implements ControlValueAccessor, OnInit, 
   @Input() stepMinute: number = DEFAULT_STEP;
   @Input() stepSecond: number = DEFAULT_STEP;
   @Input() disableSecond = false;
-
-  /** Hour */
-  private get hour() {
-    let val = Number(this.form.controls['hour'].value);
-    return isNaN(val) ? 0 : val;
-  };
-
-  private get minute() {
-    let val = Number(this.form.controls['minute'].value);
-    return isNaN(val) ? 0 : val;
-  };
-
-  private get second() {
-    let val = Number(this.form.controls['second'].value);
-    return isNaN(val) ? 0 : val;
-  };
+  @Input() time12hFormat = false;
 
   public limit = LIMIT_TIMES;
-
-  private _onChange: any = () => { };
-  private _onTouched: any = () => { };
   private _disabled: boolean;
   private _model: Date | Moment;
 
@@ -65,21 +78,15 @@ export class NgxMatTimepickerComponent implements ControlValueAccessor, OnInit, 
   private _configEventForm = {
     onlySelf: false,
     emitEvent: false
-  }
+  };
 
-  constructor(private cd: ChangeDetectorRef, private formBuilder: FormBuilder) {
-    this.form = this.formBuilder.group(
-      {
-        hour: [{ value: null, disabled: this.disabled }, [Validators.required, Validators.pattern(PATTERN_INPUT_HOUR)]],
-        minute: [{ value: null, disabled: this.disabled }, [Validators.required, Validators.pattern(PATTERN_INPUT_MINUTE)]],
-        second: [{ value: null, disabled: this.disabled }, [Validators.required, Validators.pattern(PATTERN_INPUT_SECOND)]]
-      });
-  }
+  private _onChange: any = () => { };
+  private _onTouched: any = () => { };
 
   ngOnInit() {
     this.form.valueChanges.pipe(takeUntil(this._destroyed), debounceTime(400)).subscribe(val => {
       this._updateModel();
-    })
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -96,7 +103,7 @@ export class NgxMatTimepickerComponent implements ControlValueAccessor, OnInit, 
 
   /**
    * Writes a new value to the element.
-   * @param obj
+   * @param val
    */
   writeValue(val: Date): void {
     this._model = val || new Date();
@@ -123,11 +130,17 @@ export class NgxMatTimepickerComponent implements ControlValueAccessor, OnInit, 
 
   /** Handler arrow's click event */
   public onArrowClick(prop: string, up: boolean) {
-    //hour => stepHour
+    // hour => stepHour
     const keyProp = prop[0].toUpperCase() + prop.slice(1);
     let nextVal = up ? this[prop] + this[`step${keyProp}`] : this[prop] - this[`step${keyProp}`];
-    const min = this.limit[`min${keyProp}`];
-    const max = this.limit[`max${keyProp}`];
+    let min, max;
+    if (this.time12hFormat) {
+       min = this.limit[`min12${keyProp}`];
+       max = this.limit[`max12${keyProp}`];
+    } else {
+       min = this.limit[`min24${keyProp}`];
+       max = this.limit[`max24${keyProp}`];
+    }
     if (up) {
       nextVal = nextVal > max ? (nextVal - max + min - 1) : nextVal;
     } else {
@@ -139,17 +152,26 @@ export class NgxMatTimepickerComponent implements ControlValueAccessor, OnInit, 
 
   /** Update controls of form by model */
   private _updateHourMinuteSecond() {
-    this.form.controls['hour'].setValue(formatTwoDigitTimeValue(getHour(this._model)));
-    this.form.controls['minute'].setValue(formatTwoDigitTimeValue(getMinute(this._model)));
-    this.form.controls['second'].setValue(formatTwoDigitTimeValue(getSecond(this._model)));
+    this.form.controls.hour.setValue(formatTwoDigitTimeValue(getHour(this._model)));
+    this.form.controls.meridian.setValue(getMeridian(this._model));
+    this.form.controls.minute.setValue(formatTwoDigitTimeValue(getMinute(this._model)));
+    this.form.controls.second.setValue(formatTwoDigitTimeValue(getSecond(this._model)));
   }
 
   /** Update model */
   private _updateModel() {
-    setHour(this._model, this.hour);
+    setHour(this._model, this.hour, this.meridian);
     setMinute(this._model, this.minute);
     setSecond(this._model, this.second);
     this._onChange(this._model);
   }
 
+  /**
+   * Set the selected meridian value
+   * @param meridian string input value 'AM'/'PM'
+   */
+  private setMeridian(meridian: string) {
+    this.form.controls.meridian.setValue(meridian, this._configEventForm);
+    this._updateModel();
+  }
 }

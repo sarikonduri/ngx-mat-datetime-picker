@@ -15,13 +15,14 @@ export class AppComponent implements OnInit {
   public disabled = false;
   public showSpinners = true;
   public disableSecond = true;
+  public time12hFormat = true;
 
   public formGroup = new FormGroup({
     date: new FormControl(null, [Validators.required])
-  })
+  });
   public dateControl = new FormControl(moment());
 
-  constructor(private http: HttpClient, private zone: NgZone) {
+  constructor() {
   }
 
   ngOnInit() {

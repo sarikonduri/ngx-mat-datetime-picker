@@ -194,6 +194,12 @@ export class NgxMatDatetimePicker<D> implements OnDestroy, CanColor {
   set disableSecond(value: boolean) { this._disableSecond = value; }
   public _disableSecond = false;
 
+  /** Time format */
+  @Input()
+  get time12hFormat(): boolean { return this._time12hFormat; }
+  set time12hFormat(value: boolean) { this._time12hFormat = value; }
+  public _time12hFormat = false;
+
   /** Step hour */
   @Input()
   get stepHour(): number { return this._stepHour; }

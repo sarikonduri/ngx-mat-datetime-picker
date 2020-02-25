@@ -3,13 +3,15 @@ import { Moment } from 'moment';
 const moment = moment_;
 
 export const LIMIT_TIMES = {
-    minHour: 0,
-    maxHour: 23,
-    minMinute: 0,
-    maxMinute: 59,
-    minSecond: 0,
-    maxSecond: 59
-}
+  min24Hour: 0,
+  max24Hour: 23,
+  min12Hour: 1,
+  max12Hour: 12,
+  minMinute: 0,
+  maxMinute: 59,
+  minSecond: 0,
+  maxSecond: 59
+};
 
 export const DEFAULT_STEP = 1;
 export const DEFAULT_HOUR_PLACEHOLDER = '';
@@ -63,12 +65,16 @@ export function createMissingDateImplError(provider: string) {
         `custom implementation.`);
 }
 
-export function setHour(model: Date | Moment, val: number): void {
-    if (model instanceof Date) {
-        model.setHours(val);
-    } else if (moment.isMoment(model)) {
-        model.hour(val);
-    }
+export function setHour(model: Date | Moment, val: number, meridian?: string): void {
+  let newValue = val;
+  if (meridian) {
+    newValue = meridian === 'PM' ? val + 12 : val;
+  }
+  if (model instanceof Date) {
+    model.setHours(newValue);
+  } else if (moment.isMoment(model)) {
+    model.hour(newValue);
+  }
 }
 
 export function setMinute(model: Date | Moment, val: number): void {
@@ -94,6 +100,23 @@ export function getHour(model: Date | Moment): number {
         return model.hour();
     }
     return null;
+}
+
+export function getMeridian(model: Date | Moment): number {
+  let hours = null;
+  let meridian = null;
+
+  if (model instanceof Date) {
+    hours = model.getHours();
+  } else if (moment.isMoment(model)) {
+    hours = model.hour();
+  }
+
+  if (hours > -1) {
+    meridian = hours > 10 ? 'PM' : 'AM';
+  }
+
+  return meridian;
 }
 
 export function getMinute(model: Date | Moment): number {

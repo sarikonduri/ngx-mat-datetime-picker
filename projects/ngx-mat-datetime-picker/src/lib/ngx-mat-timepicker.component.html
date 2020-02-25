@@ -21,6 +21,8 @@
             <mat-icon>expand_less</mat-icon>
           </button>
         </td>
+        <td></td>
+        <td></td>
       </tr>
       <tr>
         <td>
@@ -39,6 +41,11 @@
           <mat-form-field>
             <input type="text" matInput formControlName="second">
           </mat-form-field>
+        </td>
+        <td></td>
+        <td *ngIf="time12hFormat">
+          <div *ngIf="meridian === 'AM'"><button (click)="setMeridian('PM')" matButton class="toggle-meridian">AM</button></div>
+          <div *ngIf="meridian === 'PM'"><button (click)="setMeridian('AM')" matButton class="toggle-meridian">PM</button></div>
         </td>
       </tr>
       <tr *ngIf="showSpinners">
@@ -60,6 +67,8 @@
             <mat-icon>expand_more</mat-icon>
           </button>
         </td>
+        <td></td>
+        <td></td>
       </tr>
     </tbody>
   </table>

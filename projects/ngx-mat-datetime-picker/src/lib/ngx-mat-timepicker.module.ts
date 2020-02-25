@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { NgxMatTimepickerComponent } from './ngx-mat-timepicker.component';
 
+// @ts-ignore
 @NgModule({
   imports: [
     CommonModule,
