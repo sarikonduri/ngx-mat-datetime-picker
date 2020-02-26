@@ -68,7 +68,7 @@ export function createMissingDateImplError(provider: string) {
 export function setHour(model: Date | Moment, val: number, meridian?: string): void {
   let newValue = val;
   if (meridian) {
-    newValue = meridian === 'PM' ? val + 12 : val;
+    newValue = meridian === 'PM' ? (val === 12 ? 12 : val + 12 ): val === 12 ? 0 : val;
   }
   if (model instanceof Date) {
     model.setHours(newValue);
@@ -113,7 +113,7 @@ export function getMeridian(model: Date | Moment): number {
   }
 
   if (hours > -1) {
-    meridian = hours > 10 ? 'PM' : 'AM';
+    meridian = hours > 11 ? 'PM' : 'AM';
   }
 
   return meridian;
